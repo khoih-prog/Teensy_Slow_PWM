@@ -21,7 +21,7 @@
 
 ### Initial Releases v1.0.0
 
-1. Initial coding to support **Teensy boards, such as Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, Teensy MicroMod, etc.**, etc. using [Teensyduno core](https://www.pjrc.com/teensy/td_download.html)
+1. Initial coding to support **Teensy boards, such as Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, Teensy MicroMod, etc.**, using [Teensyduno core](https://www.pjrc.com/teensy/td_download.html)
 
 2. The hybrid ISR-based PWM channels can generate from very low (much less than 1Hz) to highest PWM frequencies up to 500-1000Hz with acceptable accuracy.
 
