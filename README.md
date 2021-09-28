@@ -168,14 +168,14 @@ Another way to install is to:
 
 #### 1. For Teensy boards
  
- **To be able to compile and run on Teensy boards**, you have to copy the file [Teensy boards.txt](Packages_Patches/hardware/teensy/avr/boards.txt) into Teensy hardware directory (./arduino-1.8.13/hardware/teensy/avr/boards.txt). 
+ **To be able to compile and run on Teensy boards**, you have to copy the file [Teensy boards.txt](Packages_Patches/hardware/teensy/avr/boards.txt) into Teensy hardware directory (./arduino-1.8.16/hardware/teensy/avr/boards.txt). 
 
-Supposing the Arduino version is 1.8.13. These files must be copied into the directory:
+Supposing the Arduino version is 1.8.16. These files must be copied into the directory:
 
-- `./arduino-1.8.13/hardware/teensy/avr/boards.txt`
-- `./arduino-1.8.13/hardware/teensy/avr/cores/teensy/Stream.h`
-- `./arduino-1.8.13/hardware/teensy/avr/cores/teensy3/Stream.h`
-- `./arduino-1.8.13/hardware/teensy/avr/cores/teensy4/Stream.h`
+- `./arduino-1.8.16/hardware/teensy/avr/boards.txt`
+- `./arduino-1.8.16/hardware/teensy/avr/cores/teensy/Stream.h`
+- `./arduino-1.8.16/hardware/teensy/avr/cores/teensy3/Stream.h`
+- `./arduino-1.8.16/hardware/teensy/avr/cores/teensy4/Stream.h`
 
 Whenever a new version is installed, remember to copy this file into the new version directory. For example, new version is x.yy.zz
 This file must be copied into the directory:
@@ -803,7 +803,7 @@ Channel : 7	Period : 125000		OnTime : 56250	Start_Time : 2922007
 
 ---
 
-### 3. ISR_8_PWMs_Array_Simple on on Teensy 4.1
+### 3. ISR_8_PWMs_Array_Simple on Teensy 4.1
 
 The following is the sample terminal output when running example [**ISR_8_PWMs_Array_Simple**](examples/ISR_8_PWMs_Array_Simple) on **on Teensy 4.1** to demonstrate how to use multiple PWM channels.
 
