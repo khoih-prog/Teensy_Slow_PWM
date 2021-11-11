@@ -29,14 +29,18 @@
   * [1. Init Hardware Timer](#1-init-hardware-timer)
   * [2. Set PWM Frequency, dutycycle, attach irqCallbackStartFunc and irqCallbackStopFunc functions](#2-Set-PWM-Frequency-dutycycle-attach-irqCallbackStartFunc-and-irqCallbackStopFunc-functions)
 * [Examples](#examples)
-  * [  1. ISR_8_PWMs_Array](examples/ISR_8_PWMs_Array)
-  * [  2. ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex)
-  * [  3. ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
+  * [ 1. ISR_8_PWMs_Array](examples/ISR_8_PWMs_Array)
+  * [ 2. ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex)
+  * [ 3. ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
+  * [ 4. ISR_Changing_PWM](examples/ISR_Changing_PWM)
+  * [ 5. ISR_Modify_PWM](examples/ISR_Modify_PWM)
 * [Example ISR_8_PWMs_Array_Complex](#Example-ISR_8_PWMs_Array_Complex)
 * [Debug Terminal Output Samples](#debug-terminal-output-samples)
   * [1. ISR_8_PWMs_Array_Complex on Teensy 4.1](#1-ISR_8_PWMs_Array_Complex-on-Teensy-41)
   * [2. ISR_8_PWMs_Array on Teensy 4.1](#2-isr_8_pwms_array-on-Teensy-41)
   * [3. ISR_8_PWMs_Array_Simple on Teensy 4.1](#3-ISR_8_PWMs_Array_Simple-on-Teensy-41)
+  * [4. ISR_Modify_PWM on Teensy 4.1](#4-ISR_Modify_PWM-on-Teensy-41)
+  * [5. ISR_Changing_PWM on Teensy 4.1](#5-ISR_Changing_PWM-on-Teensy-41)
 * [Debug](#debug)
 * [Troubleshooting](#troubleshooting)
 * [Issues](#issues)
@@ -54,7 +58,7 @@
 
 ### Features
 
-This library enables you to use ISR-based PWM channels on **Teensy boards, such as Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, Teensy MicroMod, etc.**, etc. using [Teensyduno core](https://www.pjrc.com/teensy/td_download.html) to create and output PWM any GPIO pin. Because this library doesn't use the powerful purely hardware-controlled PWM with many limitations, the maximum PWM frequency is currently limited at **500Hz**, which is still suitable for many real-life applications.
+This library enables you to use ISR-based PWM channels on **Teensy boards, such as Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, Teensy MicroMod, etc.**, etc. using [Teensyduno core](https://www.pjrc.com/teensy/td_download.html) to create and output PWM any GPIO pin. Because this library doesn't use the powerful purely hardware-controlled PWM with many limitations, the maximum PWM frequency is currently limited at **500Hz**, which is still suitable for many real-life applications. Now you can change the PWM settings on-the-fly
 
 ---
 
@@ -262,7 +266,9 @@ void setup()
 
  1. [ISR_8_PWMs_Array](examples/ISR_8_PWMs_Array)
  2. [ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex)
- 3. [ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple) 
+ 3. [ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
+ 4. [ISR_Changing_PWM](examples/ISR_Changing_PWM)
+ 5. [ISR_Modify_PWM](examples/ISR_Modify_PWM)
 
  
 ---
@@ -405,11 +411,10 @@ uint32_t PWM_Period[NUMBER_ISR_PWMS] =
   1000L,   500L,   333L,   250L,   200L,   166L,   142L,   125L
 };
 
-
 // You can assign any interval for any timer here, in Hz
-uint32_t PWM_Freq[NUMBER_ISR_PWMS] =
+double PWM_Freq[NUMBER_ISR_PWMS] =
 {
-  1,  2,  3,  4,  5,  6,  7,  8
+  1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
 };
 
 // You can assign any interval for any timer here, in Microseconds
@@ -734,7 +739,7 @@ The following is the sample terminal output when running example [ISR_8_PWMs_Arr
 
 ```
 Starting ISR_8_PWMs_Array_Complex on Teensy 4.1
-Teensy_Slow_PWM v1.0.0
+Teensy_Slow_PWM v1.1.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
 [PWM] Request interval = 20 , actual interval (us) = 20
@@ -785,7 +790,7 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array on Teensy 4.1
-Teensy_Slow_PWM v1.0.0
+Teensy_Slow_PWM v1.1.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
 [PWM] Request interval = 33 , actual interval (us) = 33
@@ -809,7 +814,7 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array_Simple on Teensy 4.1
-Teensy_Slow_PWM v1.0.0
+Teensy_Slow_PWM v1.1.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
 [PWM] Request interval = 33 , actual interval (us) = 33
@@ -823,6 +828,51 @@ Channel : 4	Period : 200000		OnTime : 60000	Start_Time : 3906007
 Channel : 5	Period : 166666		OnTime : 58333	Start_Time : 3906007
 Channel : 6	Period : 142857		OnTime : 57142	Start_Time : 3906007
 Channel : 7	Period : 125000		OnTime : 56250	Start_Time : 3906007
+```
+
+---
+
+### 4. ISR_Modify_PWM on Teensy 4.1
+
+The following is the sample terminal output when running example [ISR_Modify_PWM](examples/ISR_Modify_PWM) on **Teensy 4.1** to demonstrate how to modify PWM settings on-the-fly without deleting the PWM channel
+
+```
+Starting ISR_Modify_PWM on Teensy 4.1
+Teensy_Slow_PWM v1.1.0
+CPU Frequency = 600 MHz
+[PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
+[PWM] Request interval = 33 , actual interval (us) = 33
+[PWM] Prescale = 0 , _timerCount = 2475
+Starting ITimer OK, micros() = 2826009
+Using PWM Freq = 1.00, PWM DutyCycle = 10
+Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 2826012
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12827000
+Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 22828000
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32829000
+```
+
+---
+
+### 5. ISR_Changing_PWM on Teensy 4.1
+
+The following is the sample terminal output when running example [ISR_Changing_PWM](examples/ISR_Changing_PWM) on **Teensy 4.1** to demonstrate how to modify PWM settings on-the-fly by deleting the PWM channel and reinit the PWM channel
+
+```
+Starting ISR_Changing_PWM on Teensy 4.1
+Teensy_Slow_PWM v1.1.0
+CPU Frequency = 600 MHz
+[PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
+[PWM] Request interval = 33 , actual interval (us) = 33
+[PWM] Prescale = 0 , _timerCount = 2475
+Starting ITimer OK, micros() = 2892009
+Using PWM Freq = 1.00, PWM DutyCycle = 50
+Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 2892013
+Using PWM Freq = 2.00, PWM DutyCycle = 90
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12892018
+Using PWM Freq = 1.00, PWM DutyCycle = 50
+Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 22892023
+Using PWM Freq = 2.00, PWM DutyCycle = 90
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32892029
 ```
 
 
@@ -869,6 +919,7 @@ Submit issues to: [Teensy_Slow_PWM issues](https://github.com/khoih-prog/Teensy_
 
 1. Basic hardware multi-channel PWM for **Teensy boards, such as Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, Teensy MicroMod, etc.**, etc. using [Teensyduno core](https://www.pjrc.com/teensy/td_download.html)
 2. Add Table of Contents
+3. Add functions to modify PWM settings on-the-fly
 
 ---
 ---
