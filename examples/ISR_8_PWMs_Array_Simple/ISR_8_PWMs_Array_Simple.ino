@@ -24,6 +24,7 @@
 
 #define USING_MICROS_RESOLUTION       true  //false 
 
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "Teensy_Slow_PWM.h"
 
 #include <SimpleTimer.h>              // https://github.com/jfturcot/SimpleTimer
@@ -48,8 +49,8 @@
 #if defined(__IMXRT1062__)
   // For Teensy 4.0 and 4.1
   // Don't change these numbers to make higher Timer freq. System can hang
-  #define HW_TIMER_INTERVAL_MS        0.0333f
-  #define HW_TIMER_INTERVAL_FREQ      30000L
+  #define HW_TIMER_INTERVAL_MS        0.01f
+  #define HW_TIMER_INTERVAL_FREQ      100000L
 #elif defined(__MK66FX1M0__)
   // For Teensy 3.6
   // Don't change these numbers to make higher Timer freq. System can hang
@@ -99,15 +100,15 @@ uint32_t PWM_Pin[] =
 #define NUMBER_ISR_PWMS         ( sizeof(PWM_Pin) / sizeof(uint32_t) )
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[NUMBER_ISR_PWMS] =
+float PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
 };
 
 // You can assign any interval for any timer here, in Microseconds
-uint32_t PWM_DutyCycle[NUMBER_ISR_PWMS] =
+float PWM_DutyCycle[] =
 {
-  5, 10, 20, 25, 30, 35, 40, 45
+  5.0, 10.0, 20.0, 30.0, 40.0, 45.0, 50.0, 55.0
 };
 
 ////////////////////////////////////////////////
@@ -154,7 +155,7 @@ void setup()
   // You can use up to 16 timer for each ISR_PWM
   for (uint16_t i = 0; i < NUMBER_ISR_PWMS; i++)
   {
-    //void setPWM(uint32_t pin, uint32_t frequency, uint32_t dutycycle
+    //void setPWM(uint32_t pin, float frequency, float dutycycle
     // , timer_callback_p StartCallback = nullptr, timer_callback_p StopCallback = nullptr)
 
     // You can use this with PWM_Freq in Hz

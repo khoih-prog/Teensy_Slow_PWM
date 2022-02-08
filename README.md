@@ -6,7 +6,7 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](#Contributing)
 [![GitHub issues](https://img.shields.io/github/issues/khoih-prog/Teensy_Slow_PWM.svg)](http://github.com/khoih-prog/Teensy_Slow_PWM/issues)
 
-<a href="https://www.buymeacoffee.com/khoihprog6" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+<a href="https://www.buymeacoffee.com/khoihprog6" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 50px !important;width: 181px !important;" ></a>
 
 
 ---
@@ -14,6 +14,7 @@
 
 ## Table of Contents
 
+* [Important Change from v1.2.0](#Important-Change-from-v120)
 * [Why do we need this Teensy_Slow_PWM library](#why-do-we-need-this-Teensy_Slow_PWM-library)
   * [Features](#features)
   * [Why using ISR-based PWM is better](#why-using-isr-based-pwm-is-better)
@@ -37,6 +38,7 @@
   * [ 3. ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
   * [ 4. ISR_Changing_PWM](examples/ISR_Changing_PWM)
   * [ 5. ISR_Modify_PWM](examples/ISR_Modify_PWM)
+  * [ 6. multiFileProject](examples/multiFileProject). **New**
 * [Example ISR_8_PWMs_Array_Complex](#Example-ISR_8_PWMs_Array_Complex)
 * [Debug Terminal Output Samples](#debug-terminal-output-samples)
   * [1. ISR_8_PWMs_Array_Complex on Teensy 4.1](#1-ISR_8_PWMs_Array_Complex-on-Teensy-41)
@@ -53,6 +55,36 @@
 * [Contributing](#contributing)
 * [License](#license)
 * [Copyright](#copyright)
+
+---
+---
+
+### Important Change from v1.2.0
+
+Please have a look at [HOWTO Fix `Multiple Definitions` Linker Error](#howto-fix-multiple-definitions-linker-error)
+
+As more complex calculation and check **inside ISR** are introduced from v1.2.0, there is possibly some crash depending on use-case.
+
+You can modify to use larger `HW_TIMER_INTERVAL_US`, (from current 10 / 20 / 100uS), according to your board and use-case if crash happens.
+
+
+```
+#if defined(__IMXRT1062__)
+  // For Teensy 4.0 and 4.1
+  // Don't change these numbers to make higher Timer freq. System can hang
+  #define HW_TIMER_INTERVAL_MS        0.01f
+  #define HW_TIMER_INTERVAL_FREQ      100000L
+#elif defined(__MK66FX1M0__)
+  // For Teensy 3.6
+  // Don't change these numbers to make higher Timer freq. System can hang
+  #define HW_TIMER_INTERVAL_MS        0.05f
+  #define HW_TIMER_INTERVAL_FREQ      20000L
+#else
+  // Don't change these numbers to make higher Timer freq. System can hang
+  #define HW_TIMER_INTERVAL_MS        0.1f
+  #define HW_TIMER_INTERVAL_FREQ      10000L
+#endif
+```
 
 ---
 ---
@@ -175,14 +207,14 @@ Another way to install is to:
 
 #### 1. For Teensy boards
  
- **To be able to compile and run on Teensy boards**, you have to copy the file [Teensy boards.txt](Packages_Patches/hardware/teensy/avr/boards.txt) into Teensy hardware directory (./arduino-1.8.16/hardware/teensy/avr/boards.txt). 
+ **To be able to compile and run on Teensy boards**, you have to copy the file [Teensy boards.txt](Packages_Patches/hardware/teensy/avr/boards.txt) into Teensy hardware directory (./arduino-1.8.19/hardware/teensy/avr/boards.txt). 
 
-Supposing the Arduino version is 1.8.16. These files must be copied into the directory:
+Supposing the Arduino version is 1.8.19. These files must be copied into the directory:
 
-- `./arduino-1.8.16/hardware/teensy/avr/boards.txt`
-- `./arduino-1.8.16/hardware/teensy/avr/cores/teensy/Stream.h`
-- `./arduino-1.8.16/hardware/teensy/avr/cores/teensy3/Stream.h`
-- `./arduino-1.8.16/hardware/teensy/avr/cores/teensy4/Stream.h`
+- `./arduino-1.8.19/hardware/teensy/avr/boards.txt`
+- `./arduino-1.8.19/hardware/teensy/avr/cores/teensy/Stream.h`
+- `./arduino-1.8.19/hardware/teensy/avr/cores/teensy3/Stream.h`
+- `./arduino-1.8.19/hardware/teensy/avr/cores/teensy4/Stream.h`
 
 Whenever a new version is installed, remember to copy this file into the new version directory. For example, new version is x.yy.zz
 This file must be copied into the directory:
@@ -197,24 +229,26 @@ This file must be copied into the directory:
 
 ### HOWTO Fix `Multiple Definitions` Linker Error
 
-The current library implementation, using **xyz-Impl.h instead of standard xyz.cpp**, possibly creates certain `Multiple Definitions` Linker error in certain use cases. Although it's simple to just modify several lines of code, either in the library or in the application, the library is adding 2 more source directories
+The current library implementation, using `xyz-Impl.h` instead of standard `xyz.cpp`, possibly creates certain `Multiple Definitions` Linker error in certain use cases.
 
-1. **scr_h** for new h-only files
-2. **src_cpp** for standard h/cpp files
+You can include this `.hpp` file
 
-besides the standard **src** directory.
+```
+// Can be included as many times as necessary, without `Multiple Definitions` Linker Error
+#include "Teensy_Slow_PWM.hpp"    //https://github.com/khoih-prog/Teensy_Slow_PWM
+```
 
-To use the **old standard cpp** way, locate this library' directory, then just 
+in many files. But be sure to use the following `.h` file **in just 1 `.h`, `.cpp` or `.ino` file**, which must **not be included in any other file**, to avoid `Multiple Definitions` Linker Error
 
-1. **Delete the all the files in src directory.**
-2. **Copy all the files in src_cpp directory into src.**
-3. Close then reopen the application code in Arduino IDE, etc. to recompile from scratch.
+```
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
+#include "Teensy_Slow_PWM.h"      //https://github.com/khoih-prog/Teensy_Slow_PWM
+```
 
-To re-use the **new h-only** way, just 
+Check the new [**multiFileProject** example](examples/multiFileProject) for a `HOWTO` demo.
 
-1. **Delete the all the files in src directory.**
-2. **Copy the files in src_h directory into src.**
-3. Close then reopen the application code in Arduino IDE, etc. to recompile from scratch.
+Have a look at the discussion in [Different behaviour using the src_cpp or src_h lib #80](https://github.com/khoih-prog/ESPAsync_WiFiManager/discussions/80)
+
 
 
 ---
@@ -272,6 +306,7 @@ void setup()
  3. [ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
  4. [ISR_Changing_PWM](examples/ISR_Changing_PWM)
  5. [ISR_Modify_PWM](examples/ISR_Modify_PWM)
+ 6. [**multiFileProject**](examples/multiFileProject) **New**
 
  
 ---
@@ -291,6 +326,7 @@ void setup()
 
 #define USING_MICROS_RESOLUTION       true  //false 
 
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "Teensy_Slow_PWM.h"
 
 #include <SimpleTimer.h>              // https://github.com/jfturcot/SimpleTimer
@@ -315,8 +351,8 @@ void setup()
 #if defined(__IMXRT1062__)
   // For Teensy 4.0 and 4.1
   // Don't change these numbers to make higher Timer freq. System can hang
-  #define HW_TIMER_INTERVAL_MS        0.0333f
-  #define HW_TIMER_INTERVAL_FREQ      30000L
+  #define HW_TIMER_INTERVAL_MS        0.01f
+  #define HW_TIMER_INTERVAL_FREQ      100000L
 #elif defined(__MK66FX1M0__)
   // For Teensy 3.6
   // Don't change these numbers to make higher Timer freq. System can hang
@@ -379,9 +415,9 @@ typedef struct
   irqCallback   irqCallbackStartFunc;
   irqCallback   irqCallbackStopFunc;
 
-  uint32_t      PWM_Freq;
+  float         PWM_Freq;
 
-  uint32_t      PWM_DutyCycle;
+  float         PWM_DutyCycle;
 
   uint32_t      deltaMicrosStart;
   uint32_t      previousMicrosStart;
@@ -401,29 +437,30 @@ void doingSomethingStop(int index);
 
 #else   // #if USE_COMPLEX_STRUCT
 
-volatile unsigned long deltaMicrosStart    [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-volatile unsigned long previousMicrosStart [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long deltaMicrosStart    [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMicrosStart [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-volatile unsigned long deltaMicrosStop     [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-volatile unsigned long previousMicrosStop  [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long deltaMicrosStop     [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMicrosStop  [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
 // You can assign any interval for any timer here, in Microseconds
-uint32_t PWM_Period[NUMBER_ISR_PWMS] =
+uint32_t PWM_Period[] =
 {
   1000L,   500L,   333L,   250L,   200L,   166L,   142L,   125L
 };
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[NUMBER_ISR_PWMS] =
+// You can assign any interval for any timer here, in Hz
+float PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
 };
 
 // You can assign any interval for any timer here, in Microseconds
-uint32_t PWM_DutyCycle[NUMBER_ISR_PWMS] =
+float PWM_DutyCycle[] =
 {
-  5, 10, 20, 25, 30, 35, 40, 45
+  5.0, 10.0, 20.0, 30.0, 40.0, 45.0, 50.0, 55.0
 };
 
 void doingSomethingStart(int index)
@@ -537,17 +574,17 @@ void doingSomethingStop7()
 
 #if USE_COMPLEX_STRUCT
 
-ISR_PWM_Data curISR_PWM_Data[NUMBER_ISR_PWMS] =
+ISR_PWM_Data curISR_PWM_Data[] =
 {
   // pin, irqCallbackStartFunc, irqCallbackStopFunc, PWM_Freq, PWM_DutyCycle, deltaMicrosStart, previousMicrosStart, deltaMicrosStop, previousMicrosStop
   { LED_BUILTIN,  doingSomethingStart0,    doingSomethingStop0,    1,   5, 0, 0, 0, 0 },
   { PIN_D0,       doingSomethingStart1,    doingSomethingStop1,    2,  10, 0, 0, 0, 0 },
   { PIN_D1,       doingSomethingStart2,    doingSomethingStop2,    3,  20, 0, 0, 0, 0 },
-  { PIN_D2,       doingSomethingStart3,    doingSomethingStop3,    4,  25, 0, 0, 0, 0 },
-  { PIN_D3,       doingSomethingStart4,    doingSomethingStop4,    5,  30, 0, 0, 0, 0 },
-  { PIN_D4,       doingSomethingStart5,    doingSomethingStop5,    6,  35, 0, 0, 0, 0 },
-  { PIN_D5,       doingSomethingStart6,    doingSomethingStop6,    7,  40, 0, 0, 0, 0 },
-  { PIN_D6,       doingSomethingStart7,    doingSomethingStop7,    8,  45, 0, 0, 0, 0 },
+  { PIN_D2,       doingSomethingStart3,    doingSomethingStop3,    4,  30, 0, 0, 0, 0 },
+  { PIN_D3,       doingSomethingStart4,    doingSomethingStop4,    5,  40, 0, 0, 0, 0 },
+  { PIN_D4,       doingSomethingStart5,    doingSomethingStop5,    6,  45, 0, 0, 0, 0 },
+  { PIN_D5,       doingSomethingStart6,    doingSomethingStop6,    7,  50, 0, 0, 0, 0 },
+  { PIN_D6,       doingSomethingStart7,    doingSomethingStop7,    8,  55, 0, 0, 0, 0 },
 };
 
 
@@ -571,13 +608,13 @@ void doingSomethingStop(int index)
 
 #else   // #if USE_COMPLEX_STRUCT
 
-irqCallback irqCallbackStartFunc[NUMBER_ISR_PWMS] =
+irqCallback irqCallbackStartFunc[] =
 {
   doingSomethingStart0,  doingSomethingStart1,  doingSomethingStart2,  doingSomethingStart3,
   doingSomethingStart4,  doingSomethingStart5,  doingSomethingStart6,  doingSomethingStart7
 };
 
-irqCallback irqCallbackStopFunc[NUMBER_ISR_PWMS] =
+irqCallback irqCallbackStopFunc[] =
 {
   doingSomethingStop0,  doingSomethingStop1,  doingSomethingStop2,  doingSomethingStop3,
   doingSomethingStop4,  doingSomethingStop5,  doingSomethingStop6,  doingSomethingStop7
@@ -695,7 +732,7 @@ void setup()
     curISR_PWM_Data[i].previousMicrosStart = startMicros;
     //ISR_PWM.setInterval(curISR_PWM_Data[i].PWM_Period, curISR_PWM_Data[i].irqCallbackStartFunc);
 
-    //void setPWM(uint32_t pin, uint32_t frequency, uint32_t dutycycle
+    //void setPWM(uint32_t pin, float frequency, float dutycycle
     // , timer_callback_p StartCallback = nullptr, timer_callback_p StopCallback = nullptr)
 
     // You can use this with PWM_Freq in Hz
@@ -742,47 +779,56 @@ The following is the sample terminal output when running example [ISR_8_PWMs_Arr
 
 ```
 Starting ISR_8_PWMs_Array_Complex on Teensy 4.1
-Teensy_Slow_PWM v1.1.0
+Teensy_Slow_PWM v1.2.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
-[PWM] Request interval = 20 , actual interval (us) = 20
-[PWM] Prescale = 0 , _timerCount = 1500
-Starting  ITimer OK, micros() = 2968006
-Channel : 0	Period : 1000000		OnTime : 50000	Start_Time : 2968007
-Channel : 1	Period : 500000		OnTime : 50000	Start_Time : 2968007
-Channel : 2	Period : 333333		OnTime : 66666	Start_Time : 2968007
-Channel : 3	Period : 250000		OnTime : 62500	Start_Time : 2968007
-Channel : 4	Period : 200000		OnTime : 60000	Start_Time : 2968007
-Channel : 5	Period : 166666		OnTime : 58333	Start_Time : 2968007
-Channel : 6	Period : 142857		OnTime : 57142	Start_Time : 2968007
-Channel : 7	Period : 125000		OnTime : 56250	Start_Time : 2968007
-SimpleTimer (us): 2000, us : 12968028, Dus : 10000021
-PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000014, prog DutyCycle : 5, actual : 5.00
-PWM Channel : 1, prog Period (ms): 500.00, actual : 500006, prog DutyCycle : 10, actual : 10.00
-PWM Channel : 2, prog Period (ms): 333.33, actual : 333351, prog DutyCycle : 20, actual : 20.00
-PWM Channel : 3, prog Period (ms): 250.00, actual : 250003, prog DutyCycle : 25, actual : 25.00
-PWM Channel : 4, prog Period (ms): 200.00, actual : 200006, prog DutyCycle : 30, actual : 30.00
-PWM Channel : 5, prog Period (ms): 166.67, actual : 166676, prog DutyCycle : 35, actual : 34.99
-PWM Channel : 6, prog Period (ms): 142.86, actual : 142868, prog DutyCycle : 40, actual : 39.99
-PWM Channel : 7, prog Period (ms): 125.00, actual : 125002, prog DutyCycle : 45, actual : 44.99
-SimpleTimer (us): 2000, us : 22968058, Dus : 10000030
-PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000013, prog DutyCycle : 5, actual : 5.00
-PWM Channel : 1, prog Period (ms): 500.00, actual : 500006, prog DutyCycle : 10, actual : 10.00
-PWM Channel : 2, prog Period (ms): 333.33, actual : 333351, prog DutyCycle : 20, actual : 20.00
-PWM Channel : 3, prog Period (ms): 250.00, actual : 250003, prog DutyCycle : 25, actual : 24.99
-PWM Channel : 4, prog Period (ms): 200.00, actual : 200007, prog DutyCycle : 30, actual : 30.00
-PWM Channel : 5, prog Period (ms): 166.67, actual : 166675, prog DutyCycle : 35, actual : 34.99
-PWM Channel : 6, prog Period (ms): 142.86, actual : 142867, prog DutyCycle : 40, actual : 39.99
-PWM Channel : 7, prog Period (ms): 125.00, actual : 125002, prog DutyCycle : 45, actual : 44.99
-SimpleTimer (us): 2000, us : 32968087, Dus : 10000029
-PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000013, prog DutyCycle : 5, actual : 5.00
-PWM Channel : 1, prog Period (ms): 500.00, actual : 500007, prog DutyCycle : 10, actual : 10.00
-PWM Channel : 2, prog Period (ms): 333.33, actual : 333351, prog DutyCycle : 20, actual : 20.00
-PWM Channel : 3, prog Period (ms): 250.00, actual : 250003, prog DutyCycle : 25, actual : 24.99
-PWM Channel : 4, prog Period (ms): 200.00, actual : 200007, prog DutyCycle : 30, actual : 30.00
-PWM Channel : 5, prog Period (ms): 166.67, actual : 166676, prog DutyCycle : 35, actual : 34.99
-PWM Channel : 6, prog Period (ms): 142.86, actual : 142868, prog DutyCycle : 40, actual : 39.99
-PWM Channel : 7, prog Period (ms): 125.00, actual : 125001, prog DutyCycle : 45, actual : 44.99
+[PWM] Request interval = 10 , actual interval (us) = 10
+[PWM] Prescale = 0 , _timerCount = 750
+Starting  ITimer OK, micros() = 3017009
+Channel : 0	    Period : 1000000		OnTime : 50000	Start_Time : 3017012
+Channel : 1	    Period : 500000		OnTime : 50000	Start_Time : 3017017
+Channel : 2	    Period : 333333		OnTime : 66666	Start_Time : 3017022
+Channel : 3	    Period : 250000		OnTime : 75000	Start_Time : 3017027
+Channel : 4	    Period : 200000		OnTime : 80000	Start_Time : 3017032
+Channel : 5	    Period : 166666		OnTime : 74999	Start_Time : 3017037
+Channel : 6	    Period : 142857		OnTime : 71428	Start_Time : 3017043
+Channel : 7	    Period : 125000		OnTime : 68750	Start_Time : 3017048
+SimpleTimer (us): 2000, us : 13017053, Dus : 10000043
+PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000006, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (ms): 500.00, actual : 500003, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (ms): 333.33, actual : 333342, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (ms): 250.00, actual : 250006, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 4, prog Period (ms): 200.00, actual : 200004, prog DutyCycle : 40.00, actual : 40.00
+PWM Channel : 5, prog Period (ms): 166.67, actual : 166671, prog DutyCycle : 45.00, actual : 44.99
+PWM Channel : 6, prog Period (ms): 142.86, actual : 142865, prog DutyCycle : 50.00, actual : 50.00
+PWM Channel : 7, prog Period (ms): 125.00, actual : 125003, prog DutyCycle : 55.00, actual : 55.00
+SimpleTimer (us): 2000, us : 23017098, Dus : 10000045
+PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000006, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (ms): 500.00, actual : 500003, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (ms): 333.33, actual : 333342, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (ms): 250.00, actual : 250007, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 4, prog Period (ms): 200.00, actual : 200003, prog DutyCycle : 40.00, actual : 40.00
+PWM Channel : 5, prog Period (ms): 166.67, actual : 166671, prog DutyCycle : 45.00, actual : 44.99
+PWM Channel : 6, prog Period (ms): 142.86, actual : 142866, prog DutyCycle : 50.00, actual : 50.00
+PWM Channel : 7, prog Period (ms): 125.00, actual : 125003, prog DutyCycle : 55.00, actual : 55.00
+SimpleTimer (us): 2000, us : 33017142, Dus : 10000044
+PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000006, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (ms): 500.00, actual : 500003, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (ms): 333.33, actual : 333342, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (ms): 250.00, actual : 250006, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 4, prog Period (ms): 200.00, actual : 200003, prog DutyCycle : 40.00, actual : 40.00
+PWM Channel : 5, prog Period (ms): 166.67, actual : 166671, prog DutyCycle : 45.00, actual : 44.99
+PWM Channel : 6, prog Period (ms): 142.86, actual : 142865, prog DutyCycle : 50.00, actual : 50.00
+PWM Channel : 7, prog Period (ms): 125.00, actual : 125004, prog DutyCycle : 55.00, actual : 54.99
+SimpleTimer (us): 2000, us : 43017187, Dus : 10000045
+PWM Channel : 0, prog Period (ms): 1000.00, actual : 1000006, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (ms): 500.00, actual : 500003, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (ms): 333.33, actual : 333342, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (ms): 250.00, actual : 250007, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 4, prog Period (ms): 200.00, actual : 200004, prog DutyCycle : 40.00, actual : 40.00
+PWM Channel : 5, prog Period (ms): 166.67, actual : 166671, prog DutyCycle : 45.00, actual : 44.99
+PWM Channel : 6, prog Period (ms): 142.86, actual : 142865, prog DutyCycle : 50.00, actual : 50.00
+PWM Channel : 7, prog Period (ms): 125.00, actual : 125003, prog DutyCycle : 55.00, actual : 55.00
 ```
 
 ---
@@ -793,20 +839,20 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array on Teensy 4.1
-Teensy_Slow_PWM v1.1.0
+Teensy_Slow_PWM v1.2.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
-[PWM] Request interval = 33 , actual interval (us) = 33
-[PWM] Prescale = 0 , _timerCount = 2475
-Starting ITimer OK, micros() = 2922006
-Channel : 0	Period : 1000000		OnTime : 50000	Start_Time : 2922007
-Channel : 1	Period : 500000		OnTime : 50000	Start_Time : 2922007
-Channel : 2	Period : 333333		OnTime : 66666	Start_Time : 2922007
-Channel : 3	Period : 250000		OnTime : 62500	Start_Time : 2922007
-Channel : 4	Period : 200000		OnTime : 60000	Start_Time : 2922007
-Channel : 5	Period : 166666		OnTime : 58333	Start_Time : 2922007
-Channel : 6	Period : 142857		OnTime : 57142	Start_Time : 2922007
-Channel : 7	Period : 125000		OnTime : 56250	Start_Time : 2922007
+[PWM] Request interval = 10 , actual interval (us) = 10
+[PWM] Prescale = 0 , _timerCount = 750
+Starting ITimer OK, micros() = 2938009
+Channel : 0	    Period : 1000000		OnTime : 50000	Start_Time : 2938012
+Channel : 1	    Period : 500000		OnTime : 50000	Start_Time : 2938017
+Channel : 2	    Period : 333333		OnTime : 66666	Start_Time : 2938022
+Channel : 3	    Period : 250000		OnTime : 75000	Start_Time : 2938027
+Channel : 4	    Period : 200000		OnTime : 80000	Start_Time : 2938032
+Channel : 5	    Period : 166666		OnTime : 74999	Start_Time : 2938037
+Channel : 6	    Period : 142857		OnTime : 71428	Start_Time : 2938042
+Channel : 7	    Period : 125000		OnTime : 68750	Start_Time : 2938047
 ```
 
 ---
@@ -817,20 +863,20 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array_Simple on Teensy 4.1
-Teensy_Slow_PWM v1.1.0
+Teensy_Slow_PWM v1.2.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
-[PWM] Request interval = 33 , actual interval (us) = 33
-[PWM] Prescale = 0 , _timerCount = 2475
-Starting ITimer OK, micros() = 3906006
-Channel : 0	Period : 1000000		OnTime : 50000	Start_Time : 3906007
-Channel : 1	Period : 500000		OnTime : 50000	Start_Time : 3906007
-Channel : 2	Period : 333333		OnTime : 66666	Start_Time : 3906007
-Channel : 3	Period : 250000		OnTime : 62500	Start_Time : 3906007
-Channel : 4	Period : 200000		OnTime : 60000	Start_Time : 3906007
-Channel : 5	Period : 166666		OnTime : 58333	Start_Time : 3906007
-Channel : 6	Period : 142857		OnTime : 57142	Start_Time : 3906007
-Channel : 7	Period : 125000		OnTime : 56250	Start_Time : 3906007
+[PWM] Request interval = 10 , actual interval (us) = 10
+[PWM] Prescale = 0 , _timerCount = 750
+Starting ITimer OK, micros() = 3220009
+Channel : 0	    Period : 1000000		OnTime : 50000	Start_Time : 3220012
+Channel : 1	    Period : 500000		OnTime : 50000	Start_Time : 3220017
+Channel : 2	    Period : 333333		OnTime : 66666	Start_Time : 3220022
+Channel : 3	    Period : 250000		OnTime : 75000	Start_Time : 3220027
+Channel : 4	    Period : 200000		OnTime : 80000	Start_Time : 3220032
+Channel : 5	    Period : 166666		OnTime : 74999	Start_Time : 3220037
+Channel : 6	    Period : 142857		OnTime : 71428	Start_Time : 3220043
+Channel : 7	    Period : 125000		OnTime : 68750	Start_Time : 3220048
 ```
 
 ---
@@ -841,17 +887,16 @@ The following is the sample terminal output when running example [ISR_Modify_PWM
 
 ```
 Starting ISR_Modify_PWM on Teensy 4.1
-Teensy_Slow_PWM v1.1.0
+Teensy_Slow_PWM v1.2.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
 [PWM] Request interval = 33 , actual interval (us) = 33
 [PWM] Prescale = 0 , _timerCount = 2475
-Starting ITimer OK, micros() = 2826009
-Using PWM Freq = 1.00, PWM DutyCycle = 10
-Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 2826012
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12827000
-Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 22828000
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32829000
+Starting ITimer OK, micros() = 3196009
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 3196014
+Channel : 0	New Period : 500000		OnTime : 450000	Start_Time : 13196073
+Channel : 0	New Period : 1000000		OnTime : 500000	Start_Time : 23196400
 ```
 
 ---
@@ -862,20 +907,28 @@ The following is the sample terminal output when running example [ISR_Changing_P
 
 ```
 Starting ISR_Changing_PWM on Teensy 4.1
-Teensy_Slow_PWM v1.1.0
+Teensy_Slow_PWM v1.2.0
 CPU Frequency = 600 MHz
 [PWM] TEENSY_TIMER_1: , F_BUS_ACTUAL (MHz) = 150
 [PWM] Request interval = 33 , actual interval (us) = 33
 [PWM] Prescale = 0 , _timerCount = 2475
-Starting ITimer OK, micros() = 2892009
-Using PWM Freq = 1.00, PWM DutyCycle = 50
-Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 2892013
-Using PWM Freq = 2.00, PWM DutyCycle = 90
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12892018
-Using PWM Freq = 1.00, PWM DutyCycle = 50
-Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 22892023
-Using PWM Freq = 2.00, PWM DutyCycle = 90
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32892029
+Starting ITimer OK, micros() = 3617009
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 3617014
+Using PWM Freq = 2.00, PWM DutyCycle = 90.00
+Channel : 0	    Period : 500000		OnTime : 450000	Start_Time : 13617022
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 23617030
+Using PWM Freq = 2.00, PWM DutyCycle = 90.00
+Channel : 0	    Period : 500000		OnTime : 450000	Start_Time : 33617038
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 43617046
+Using PWM Freq = 2.00, PWM DutyCycle = 90.00
+Channel : 0	    Period : 500000		OnTime : 450000	Start_Time : 53617054
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 63617062
+Using PWM Freq = 2.00, PWM DutyCycle = 90.00
+Channel : 0	    Period : 500000		OnTime : 450000	Start_Time : 73617070
 ```
 
 
@@ -923,6 +976,11 @@ Submit issues to: [Teensy_Slow_PWM issues](https://github.com/khoih-prog/Teensy_
 1. Basic hardware multi-channel PWM for **Teensy boards, such as Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, Teensy MicroMod, etc.**, etc. using [Teensyduno core](https://www.pjrc.com/teensy/td_download.html)
 2. Add Table of Contents
 3. Add functions to modify PWM settings on-the-fly
+4. Fix `multiple-definitions` linker error
+5. Optimize library code by using `reference-passing` instead of `value-passing`
+6. Improve accuracy by using `float`, instead of `uint32_t` for `dutycycle`
+7. DutyCycle to be optionally updated at the end current PWM period instead of immediately.
+
 
 ---
 ---
