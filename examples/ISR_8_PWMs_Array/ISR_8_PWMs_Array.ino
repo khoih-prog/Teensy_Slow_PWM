@@ -17,12 +17,15 @@
   #error This code is designed to run on Teensy platform! Please check your Tools->Board setting.
 #endif
 
-// These define's must be placed at the beginning before #include "ESP32_PWM.h"
+// These define's must be placed at the beginning before #include "Teensy_Slow_PWM.h"
 // _PWM_LOGLEVEL_ from 0 to 4
 // Don't define _PWM_LOGLEVEL_ > 0. Only for special ISR debugging only. Can hang the system.
 #define _PWM_LOGLEVEL_      3
 
 #define USING_MICROS_RESOLUTION       true  //false 
+
+// Default is true, uncomment to false
+//#define CHANGING_PWM_END_OF_CYCLE     false
 
 // To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "Teensy_Slow_PWM.h"
