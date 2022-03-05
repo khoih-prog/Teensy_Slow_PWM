@@ -12,13 +12,14 @@
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
 
-  Version: 1.2.0
+  Version: 1.2.1
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
   1.0.0   K.Hoang      28/09/2021 Initial coding for Teensy 2.x, Teensy LC, Teensy 3.x, Teensy 4.x, etc.
   1.1.0   K Hoang      10/11/2021 Add functions to modify PWM settings on-the-fly
   1.2.0   K.Hoang      07/02/2022 Fix `multiple-definitions` linker error. Improve accuracy. Optimize code. Fix bug
+  1.2.1   K Hoang      04/03/2022 Fix `DutyCycle` and `New Period` display bugs. Display warning only when debug level > 3
 *****************************************************************************************************************************/
 
 #pragma once
@@ -31,13 +32,13 @@
 #endif
 
 #ifndef TEENSY_SLOW_PWM_VERSION
-  #define TEENSY_SLOW_PWM_VERSION             F("Teensy_Slow_PWM v1.2.0")
+  #define TEENSY_SLOW_PWM_VERSION             F("Teensy_Slow_PWM v1.2.1")
   
   #define TEENSY_SLOW_PWM_VERSION_MAJOR       1
   #define TEENSY_SLOW_PWM_VERSION_MINOR       2
-  #define TEENSY_SLOW_PWM_VERSION_PATCH       0
+  #define TEENSY_SLOW_PWM_VERSION_PATCH       1
 
-  #define TEENSY_SLOW_PWM_VERSION_INT         1002000  
+  #define TEENSY_SLOW_PWM_VERSION_INT         1002001
 #endif
 
 #ifndef _PWM_LOGLEVEL_
@@ -75,13 +76,25 @@ typedef void (*timerCallback)  ();
   #ifndef BOARD_NAME
     #if defined(ARDUINO_TEENSY41)
       #define BOARD_NAME          F("Teensy 4.1")
-      #warning Using Teensy 4.1
+      
+      #if (_PWM_LOGLEVEL_ > 3)
+        #warning Using Teensy 4.1
+      #endif
+      
     #elif defined(ARDUINO_TEENSY_MICROMOD)
       #define BOARD_NAME          F("Teensy MicroMod")
-      #warning Using Teensy MicroMod
+      
+      #if (_PWM_LOGLEVEL_ > 3)
+        #warning Using Teensy MicroMod
+      #endif
+      
     #else
       #define BOARD_NAME          F("Teensy 4.0")
-      #warning Using Teensy 4.0
+      
+      #if (_PWM_LOGLEVEL_ > 3)
+        #warning Using Teensy 4.0
+      #endif
+      
     #endif
       
   #endif
