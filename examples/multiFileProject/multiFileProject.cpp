@@ -1,6 +1,6 @@
 /****************************************************************************************************************************
   multiFileProject.cpp
-  
+
   For nRF52-based boards using Adafruit_nRF52_Arduino core
   Written by Khoi Hoang
 

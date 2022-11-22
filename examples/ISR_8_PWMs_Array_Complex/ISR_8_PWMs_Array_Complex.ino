@@ -5,7 +5,7 @@
 
   Built by Khoi Hoang https://github.com/khoih-prog/Teensy_Slow_PWM
   Licensed under MIT license
-  
+
   Now even you use all these new 16 ISR-based timers,with their maximum interval practically unlimited (limited only by
   unsigned long miliseconds), you just consume only one  RP2040-based timer and avoid conflicting with other cores' tasks.
   The accuracy is nearly perfect compared to software timers. The most important feature is they're ISR-based timers
@@ -340,42 +340,52 @@ void simpleTimerDoingSomething2s()
 
   unsigned long currMicros = micros();
 
-  Serial.print(F("SimpleTimer (us): ")); Serial.print(SIMPLE_TIMER_MS);
-  Serial.print(F(", us : ")); Serial.print(currMicros);
-  Serial.print(F(", Dus : ")); Serial.println(currMicros - previousMicrosStart);
+  Serial.print(F("SimpleTimer (us): "));
+  Serial.print(SIMPLE_TIMER_MS);
+  Serial.print(F(", us : "));
+  Serial.print(currMicros);
+  Serial.print(F(", Dus : "));
+  Serial.println(currMicros - previousMicrosStart);
 
   for (uint16_t i = 0; i < NUMBER_ISR_PWMS; i++)
   {
 #if USE_COMPLEX_STRUCT
-    Serial.print(F("PWM Channel : ")); Serial.print(i);
+    Serial.print(F("PWM Channel : "));
+    Serial.print(i);
     Serial.print(F(", prog Period (ms): "));
 
     Serial.print(1000.f / curISR_PWM_Data[i].PWM_Freq);
 
-    Serial.print(F(", actual : ")); Serial.print((uint32_t) curISR_PWM_Data[i].deltaMicrosStart);
+    Serial.print(F(", actual : "));
+    Serial.print((uint32_t) curISR_PWM_Data[i].deltaMicrosStart);
 
     Serial.print(F(", prog DutyCycle : "));
 
     Serial.print(curISR_PWM_Data[i].PWM_DutyCycle);
 
-    Serial.print(F(", actual : ")); Serial.println((float) curISR_PWM_Data[i].deltaMicrosStop * 100.0f / curISR_PWM_Data[i].deltaMicrosStart);
+    Serial.print(F(", actual : "));
+    Serial.println((float) curISR_PWM_Data[i].deltaMicrosStop * 100.0f / curISR_PWM_Data[i].deltaMicrosStart);
     //Serial.print(F(", actual deltaMicrosStop : ")); Serial.println(curISR_PWM_Data[i].deltaMicrosStop);
     //Serial.print(F(", actual deltaMicrosStart : ")); Serial.println(curISR_PWM_Data[i].deltaMicrosStart);
 
 #else
 
-    Serial.print(F("PWM Channel : ")); Serial.print(i);
+    Serial.print(F("PWM Channel : "));
+    Serial.print(i);
 
     Serial.print(1000 / PWM_Freq[i]);
 
-    Serial.print(F(", prog. Period (us): ")); Serial.print(PWM_Period[i]);
-    Serial.print(F(", actual : ")); Serial.print(deltaMicrosStart[i]);
+    Serial.print(F(", prog. Period (us): "));
+    Serial.print(PWM_Period[i]);
+    Serial.print(F(", actual : "));
+    Serial.print(deltaMicrosStart[i]);
 
     Serial.print(F(", prog DutyCycle : "));
 
     Serial.print(PWM_DutyCycle[i]);
 
-    Serial.print(F(", actual : ")); Serial.println( (float) deltaMicrosStop[i] * 100.0f / deltaMicrosStart[i]);
+    Serial.print(F(", actual : "));
+    Serial.println( (float) deltaMicrosStop[i] * 100.0f / deltaMicrosStart[i]);
     //Serial.print(F(", actual deltaMicrosStop : ")); Serial.println(deltaMicrosStop[i]);
     //Serial.print(F(", actual deltaMicrosStart : ")); Serial.println(deltaMicrosStart[i]);
 #endif
@@ -387,13 +397,17 @@ void simpleTimerDoingSomething2s()
 void setup()
 {
   Serial.begin(115200);
+
   while (!Serial);
 
   delay(2000);
 
-  Serial.print(F("\nStarting ISR_8_PWMs_Array_Complex on ")); Serial.println(BOARD_NAME);
+  Serial.print(F("\nStarting ISR_8_PWMs_Array_Complex on "));
+  Serial.println(BOARD_NAME);
   Serial.println(TEENSY_SLOW_PWM_VERSION);
-  Serial.print(F("CPU Frequency = ")); Serial.print(F_CPU / 1000000); Serial.println(F(" MHz"));
+  Serial.print(F("CPU Frequency = "));
+  Serial.print(F_CPU / 1000000);
+  Serial.println(F(" MHz"));
 
   // Timer0 is used for micros(), micros(), delay(), etc and can't be used
   // Select Timer 1-2 for UNO, 1-5 for MEGA, 1,3,4 for 16u4/32u4
@@ -406,20 +420,22 @@ void setup()
   if (ITimer.attachInterruptInterval(HW_TIMER_INTERVAL_MS * 1000, TimerHandler))
   {
     startMicros = micros();
-    Serial.print(F("Starting ITimer OK, micros() = ")); Serial.println(startMicros);
+    Serial.print(F("Starting ITimer OK, micros() = "));
+    Serial.println(startMicros);
   }
   else
     Serial.println(F("Can't set ITimer correctly. Select another freq. or interval"));
-    
+
 #else
 
   if (ITimer.attachInterrupt(HW_TIMER_INTERVAL_FREQ, TimerHandler))
   {
-    Serial.print(F("Starting  ITimer OK, micros() = ")); Serial.println(micros());
+    Serial.print(F("Starting  ITimer OK, micros() = "));
+    Serial.println(micros());
   }
   else
     Serial.println(F("Can't set ITimer. Select another freq. or timer"));
-    
+
 #endif
 
   startMicros = micros();

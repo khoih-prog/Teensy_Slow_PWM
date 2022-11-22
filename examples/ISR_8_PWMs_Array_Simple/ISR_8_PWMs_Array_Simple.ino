@@ -5,7 +5,7 @@
 
   Built by Khoi Hoang https://github.com/khoih-prog/Teensy_Slow_PWM
   Licensed under MIT license
-  
+
   Now even you use all these new 16 ISR-based timers,with their maximum interval practically unlimited (limited only by
   unsigned long miliseconds), you just consume only one  RP2040-based timer and avoid conflicting with other cores' tasks.
   The accuracy is nearly perfect compared to software timers. The most important feature is they're ISR-based timers
@@ -78,7 +78,7 @@ Teensy_SLOW_PWM ISR_PWM;
 //////////////////////////////////////////////////////
 
 void TimerHandler()
-{ 
+{
   ISR_PWM.run();
 }
 
@@ -103,6 +103,20 @@ uint32_t PWM_Pin[] =
 #define NUMBER_ISR_PWMS         ( sizeof(PWM_Pin) / sizeof(uint32_t) )
 
 // You can assign any interval for any timer here, in Hz
+#if 1
+float PWM_Freq[] =
+{
+  20.0f,  30.0f,  40.0f,  50.0f,  60.0f,  70.0f,  80.0f,  100.0f,
+};
+
+// You can assign any interval for any timer here, in Microseconds
+float PWM_DutyCycle[] =
+{
+  0.0, 10.0, 20.0, 30.0, 40.0, 45.0, 50.0, 0.5
+};
+
+#else
+
 float PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
@@ -114,18 +128,26 @@ float PWM_DutyCycle[] =
   5.0, 10.0, 20.0, 30.0, 40.0, 45.0, 50.0, 55.0
 };
 
+#endif
+
+
+
 ////////////////////////////////////////////////
 
 void setup()
 {
   Serial.begin(115200);
+
   while (!Serial);
 
   delay(2000);
 
-  Serial.print(F("\nStarting ISR_8_PWMs_Array_Simple on ")); Serial.println(BOARD_NAME);
+  Serial.print(F("\nStarting ISR_8_PWMs_Array_Simple on "));
+  Serial.println(BOARD_NAME);
   Serial.println(TEENSY_SLOW_PWM_VERSION);
-  Serial.print(F("CPU Frequency = ")); Serial.print(F_CPU / 1000000); Serial.println(F(" MHz"));
+  Serial.print(F("CPU Frequency = "));
+  Serial.print(F_CPU / 1000000);
+  Serial.println(F(" MHz"));
 
   // Timer0 is used for micros(), micros(), delay(), etc and can't be used
   // Select Timer 1-2 for UNO, 1-5 for MEGA, 1,3,4 for 16u4/32u4
@@ -138,20 +160,22 @@ void setup()
   if (ITimer.attachInterruptInterval(HW_TIMER_INTERVAL_MS * 1000, TimerHandler))
   {
     startMicros = micros();
-    Serial.print(F("Starting ITimer OK, micros() = ")); Serial.println(startMicros);
+    Serial.print(F("Starting ITimer OK, micros() = "));
+    Serial.println(startMicros);
   }
   else
     Serial.println(F("Can't set ITimer correctly. Select another freq. or interval"));
-    
+
 #else
 
   if (ITimer.attachInterrupt(HW_TIMER_INTERVAL_FREQ, TimerHandler))
   {
-    Serial.print(F("Starting  ITimer OK, micros() = ")); Serial.println(micros());
+    Serial.print(F("Starting  ITimer OK, micros() = "));
+    Serial.println(micros());
   }
   else
     Serial.println(F("Can't set ITimer. Select another freq. or timer"));
-    
+
 #endif
 
   // Just to demonstrate, don't use too many ISR Timers if not absolutely necessary

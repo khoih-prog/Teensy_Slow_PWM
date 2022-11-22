@@ -5,7 +5,7 @@
 
   Built by Khoi Hoang https://github.com/khoih-prog/Teensy_Slow_PWM
   Licensed under MIT license
-  
+
   Now even you use all these new 16 ISR-based timers,with their maximum interval practically unlimited (limited only by
   unsigned long miliseconds), you just consume only one  RP2040-based timer and avoid conflicting with other cores' tasks.
   The accuracy is nearly perfect compared to software timers. The most important feature is they're ISR-based timers
@@ -29,42 +29,50 @@
 
 #if ( defined(__arm__) && defined(TEENSYDUINO) && defined(__IMXRT1062__) )
 
-  // Nothing here yet
+// Nothing here yet
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // For Teensy 3.x and LC
 #elif defined(__arm__) && defined(TEENSYDUINO) && (defined(KINETISK) || defined(KINETISL))
 
-  void ftm1_isr()
-  {
-    uint32_t sc = FTM1_SC;
-    
-  #ifdef KINETISL
-    if (sc & 0x80) 
-      FTM1_SC = sc;
-  #else
-    if (sc & 0x80) 
-      FTM1_SC = sc & 0x7F;
-  #endif
+void ftm1_isr()
+{
+  uint32_t sc = FTM1_SC;
 
-    (*(TeensyTimers[TEENSY_TIMER_1]->getCallback()))();
-  }
+#ifdef KINETISL
 
-  void ftm2_isr()
-  {
-    uint32_t sc = FTM2_SC;
-    
-  #ifdef KINETISL
-    if (sc & 0x80) 
-      FTM2_SC = sc;
-  #else
-    if (sc & 0x80) 
-      FTM2_SC = sc & 0x7F;
-  #endif
+  if (sc & 0x80)
+    FTM1_SC = sc;
 
-    (*(TeensyTimers[TEENSY_TIMER_3]->getCallback()))();
-  }
+#else
+
+  if (sc & 0x80)
+    FTM1_SC = sc & 0x7F;
+
+#endif
+
+  (*(TeensyTimers[TEENSY_TIMER_1]->getCallback()))();
+}
+
+void ftm2_isr()
+{
+  uint32_t sc = FTM2_SC;
+
+#ifdef KINETISL
+
+  if (sc & 0x80)
+    FTM2_SC = sc;
+
+#else
+
+  if (sc & 0x80)
+    FTM2_SC = sc & 0x7F;
+
+#endif
+
+  (*(TeensyTimers[TEENSY_TIMER_3]->getCallback()))();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,23 +80,23 @@
 
 #elif ( defined(ARDUINO_ARCH_AVR) || defined(__AVR__) )
 
-  ISR(TIMER1_OVF_vect)
-  {
-    (*(TeensyTimers[TEENSY_TIMER_1]->getCallback()))();
-  }
+ISR(TIMER1_OVF_vect)
+{
+  (*(TeensyTimers[TEENSY_TIMER_1]->getCallback()))();
+}
 
-  ISR(TIMER3_OVF_vect)
-  {
-    (*(TeensyTimers[TEENSY_TIMER_3]->getCallback()))();
-  }
+ISR(TIMER3_OVF_vect)
+{
+  (*(TeensyTimers[TEENSY_TIMER_3]->getCallback()))();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 #else
 
-  #error Not support board
-  
+#error Not support board
+
 #endif
 
 
